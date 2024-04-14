@@ -51,5 +51,5 @@ public:
 
 	void AddSnakeElement(int ElementsNum = 1);
 
-	void Move(float DeltaTime);
+	void Move();
 };
