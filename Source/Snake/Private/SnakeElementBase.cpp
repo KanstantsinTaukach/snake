@@ -4,6 +4,7 @@
 #include "SnakeElementBase.h"
 #include "Engine/Classes/Components/StaticMeshComponent.h"
 #include "SnakeBase.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 // Sets default values
 ASnakeElementBase::ASnakeElementBase()
@@ -11,7 +12,7 @@ ASnakeElementBase::ASnakeElementBase()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
+	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("MeshComponent");
 	MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	MeshComponent->SetCollisionResponseToAllChannels(ECR_Overlap);
 }
@@ -40,6 +41,10 @@ void ASnakeElementBase::Interact(AActor* Interactor, bool bIsHead)
 	if (IsValid(Snake))
 	{
 		Snake->Destroy();
+		for (auto element : Snake->SnakeElements)
+		{
+			element->Destroy();
+		}
 	}
 }
 
@@ -58,6 +63,10 @@ void ASnakeElementBase::HandleBeginOverlap(UPrimitiveComponent* OverlappedCompon
 
 void ASnakeElementBase::ToggleCollision()
 {
+	if (!MeshComponent)
+	{
+		return;
+	}
 	if (MeshComponent->GetCollisionEnabled() == ECollisionEnabled::NoCollision)
 	{
 		MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -67,5 +76,18 @@ void ASnakeElementBase::ToggleCollision()
 		MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 	
+}
+
+void ASnakeElementBase::SetColor(const FLinearColor& InputColor)
+{
+	if (!MeshComponent)
+	{
+		return;
+	}
+	UMaterialInstanceDynamic* DynMaterial = MeshComponent->CreateAndSetMaterialInstanceDynamic(0);
+	if (DynMaterial)
+	{
+		DynMaterial->SetVectorParameterValue("Color", InputColor);
+	}
 }
 

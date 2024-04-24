@@ -49,4 +49,7 @@ public:
 
 	UFUNCTION()
 	void ToggleCollision();
+
+	void SetColor(const FLinearColor& InputColor);
+
 };

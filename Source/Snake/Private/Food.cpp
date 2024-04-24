@@ -10,13 +10,15 @@ AFood::AFood()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("MeshComponent");
+	
 }
 
 // Called when the game starts or when spawned
 void AFood::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	SetColor(FLinearColor::Yellow);
 }
 
 // Called every frame
@@ -34,7 +36,20 @@ void AFood::Interact(AActor* Interactor, bool bIsHead)
 		if (IsValid(Snake))
 		{
 			Snake->AddSnakeElement();
+			this->Destroy();
 		}
 	}
 }
 
+void AFood::SetColor(const FLinearColor& InputColor)
+{
+	if (!MeshComponent)
+	{
+		return;
+	}
+	UMaterialInstanceDynamic* DynMaterial = MeshComponent->CreateAndSetMaterialInstanceDynamic(0);
+	if (DynMaterial)
+	{
+		DynMaterial->SetVectorParameterValue("Color", InputColor);
+	}
+}

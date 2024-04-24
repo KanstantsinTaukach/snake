@@ -11,7 +11,7 @@ ASnakeBase::ASnakeBase()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	ElementSize = 100;
+	ElementSize = 120;
 }
 
 // Called when the game starts or when spawned
@@ -19,7 +19,7 @@ void ASnakeBase::BeginPlay()
 {
 	Super::BeginPlay();
 	SetActorTickInterval(MovementSpeed);
-	AddSnakeElement(5);
+	AddSnakeElement(4);
 	LastMoveDirection = EMovementDirection::M_DOWN;
 		
 }
@@ -36,15 +36,46 @@ void ASnakeBase::AddSnakeElement(int ElementsNum)
 {
 	for (int i = 0; i < ElementsNum; ++i)
 	{
-		FVector NewLocation(SnakeElements.Num() * ElementSize, 0, 0);
+		FVector NewLocation(FVector::ZeroVector);
+
+		if (int32 Index = SnakeElements.Num() > 0)
+		{
+			ASnakeElementBase* PrevElement = SnakeElements[Index - 1];
+			FVector PrevLocation = PrevElement->GetActorLocation();
+
+
+			switch (LastMoveDirection)
+			{
+			case EMovementDirection::M_UP:
+				NewLocation += ElementSize * PrevLocation;
+				break;
+
+			case EMovementDirection::M_DOWN:
+				NewLocation -= ElementSize * PrevLocation;
+				break;
+
+			case EMovementDirection::M_LEFT:
+				NewLocation += ElementSize * PrevLocation;
+				break;
+
+			case EMovementDirection::M_RIGHT:
+				NewLocation -= ElementSize * PrevLocation;
+				break;
+			}
+		}
+
 		FTransform NewTransform(NewLocation);
 		ASnakeElementBase* NewSnakeElem = GetWorld()->SpawnActor<ASnakeElementBase>(SnakeElementClass, NewTransform);
-		NewSnakeElem->SnakeOwner = this;
-		int32 ElemIndex = SnakeElements.Add(NewSnakeElem);
-		if (ElemIndex == 0)
+		if (NewSnakeElem)
 		{
-			NewSnakeElem->SetFirstElementType();
-		}
+			NewSnakeElem->SnakeOwner = this;
+			NewSnakeElem->SetColor(FLinearColor::Red);
+			int32 ElemIndex = SnakeElements.Add(NewSnakeElem);
+			if (ElemIndex == 0)
+			{
+				NewSnakeElem->SetFirstElementType();
+			}
+		}	
 	}	
 }
 
@@ -52,21 +83,21 @@ void ASnakeBase::Move()
 {
 	FVector MovementVector(FVector::ZeroVector);
 
-	switch (LastMoveDirection)
-	{
-	case EMovementDirection::M_UP:
-		MovementVector.X += ElementSize;
-		break;
-	case EMovementDirection::M_DOWN:
-		MovementVector.X -= ElementSize;
-		break;
-	case EMovementDirection::M_LEFT:
-		MovementVector.Y += ElementSize;
-		break;
-	case EMovementDirection::M_RIGHT:
-		MovementVector.Y -= ElementSize;
-		break;
-	}
+		switch (LastMoveDirection)
+		{
+		case EMovementDirection::M_UP:
+			MovementVector.X += ElementSize;
+			break;
+		case EMovementDirection::M_DOWN:
+			MovementVector.X -= ElementSize;
+			break;
+		case EMovementDirection::M_LEFT:
+			MovementVector.Y += ElementSize;
+			break;
+		case EMovementDirection::M_RIGHT:
+			MovementVector.Y -= ElementSize;
+			break;
+		}
 
 	SnakeElements[0]->ToggleCollision();
 
@@ -80,6 +111,8 @@ void ASnakeBase::Move()
 	
 	SnakeElements[0]->AddActorWorldOffset(MovementVector);
 	SnakeElements[0]->ToggleCollision();
+
+	HasMoved = false;
 }
 
 void ASnakeBase::SnakeElementOverlap(ASnakeElementBase* OverlappedElement, AActor* Other)

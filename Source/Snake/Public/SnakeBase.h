@@ -39,7 +39,10 @@ public:
 	EMovementDirection LastMoveDirection;
 
 	UPROPERTY(EditDefaultsOnly)
-	float MovementSpeed;
+	float MovementSpeed = 0.1f;
+
+	UPROPERTY()
+	bool HasMoved = false;
 
 protected:
 	// Called when the game starts or when spawned
